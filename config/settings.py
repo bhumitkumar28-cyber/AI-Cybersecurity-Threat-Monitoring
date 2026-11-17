@@ -13,16 +13,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Development-only secret key.
 # Production mein isse .env file se load karna chahiye.
-SECRET_KEY = 'django-insecure-cybersecurity-dashboard-mca-project-key'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-local-dev-key')
 
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Development mode
-DEBUG = True
-
-
-# Allowed local hosts
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-
+ALLOWED_HOSTS = os.getenv(
+    'ALLOWED_HOSTS',
+    'localhost,127.0.0.1'
+).split(',')
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS', ''
+).split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
 
 # Application definition
 INSTALLED_APPS = [
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -93,7 +95,9 @@ ASGI_APPLICATION = 'config.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': Path(
+            os.getenv('SQLITE_PATH', str(BASE_DIR / 'db.sqlite3'))
+        ),
     }
 }
 
