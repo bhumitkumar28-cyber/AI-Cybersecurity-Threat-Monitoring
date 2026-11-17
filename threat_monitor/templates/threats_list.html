@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Threats | Cybersecurity Monitor
+{% endblock %}
+
+{% block content %}
+
+<div class="threats-list-page">
+
+```
+<!-- ========================================== -->
+<!-- PAGE HEADER -->
+<!-- ========================================== -->
+
+<h2>
+    <i class="fas fa-bell"></i>
+    Threats by Severity
+</h2>
+
+
+<!-- ========================================== -->
+<!-- FILTER -->
+<!-- ========================================== -->
+
+<div class="filter-section">
+
+    <form method="get" class="filter-form">
+
+        <select
+            name="severity"
+            onchange="this.form.submit()"
+        >
+
+            <option value="">
+                All Severities
+            </option>
+
+
+            <option
+                value="CRITICAL"
+                {% if severity == 'CRITICAL' %}selected{% endif %}
+            >
+                Critical
+            </option>
+
+
+            <option
+                value="HIGH"
+                {% if severity == 'HIGH' %}selected{% endif %}
+            >
+                High
+            </option>
+
+
+            <option
+                value="MEDIUM"
+                {% if severity == 'MEDIUM' %}selected{% endif %}
+            >
+                Medium
+            </option>
+
+
+            <option
+                value="LOW"
+                {% if severity == 'LOW' %}selected{% endif %}
+            >
+                Low
+            </option>
+
+        </select>
+
+    </form>
+
+</div>
+
+
+
+<!-- ========================================== -->
+<!-- THREATS -->
+<!-- ========================================== -->
+
+{% if threats %}
+
+<div class="threats-grid">
+
+    {% for threat in threats %}
+
+    <div class="threat-card">
+
+        <div class="threat-header">
+
+            <h4>
+                {{ threat.threat_type }}
+            </h4>
+
+
+            <span class="threat-severity {{ threat.severity|lower }}">
+                {{ threat.severity }}
+            </span>
+
+        </div>
+
+
+        <div class="threat-body">
+
+            <p>
+                {{ threat.description }}
+            </p>
+
+
+            <div class="threat-meta">
+
+                <span>
+                    <i class="far fa-clock"></i>
+
+                    {{ threat.detected_at|date:"M d, H:i" }}
+                </span>
+
+
+                <a
+                    href="{% url 'threat_details' threat.id %}"
+                    class="btn btn-sm"
+                >
+                    <i class="fas fa-robot"></i>
+                    AI Copilot
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+{% else %}
+
+
+<!-- ========================================== -->
+<!-- NO THREATS -->
+<!-- ========================================== -->
+
+<div class="no-threats">
+
+    <i class="fas fa-shield-alt"></i>
+
+    <p>
+        No threats found.
+    </p>
+
+</div>
+
+
+{% endif %}
+```
+
+</div>
+
+{% endblock %}

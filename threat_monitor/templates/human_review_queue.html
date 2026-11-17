@@ -1,0 +1,34 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Human Review Queue</h1>
+    <p>Review high-priority threats before taking action.</p>
+
+    {% if threats %}
+    <table>
+        <thead>
+            <tr>
+                <th>Threat Type</th>
+                <th>Severity</th>
+                <th>Description</th>
+                <th>Detected At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for threat in threats %}
+            <tr>
+                <td>{{ threat.threat_type }}</td>
+                <td>{{ threat.severity }}</td>
+                <td>{{ threat.description }}</td>
+                <td>{{ threat.detected_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No threats are waiting for review.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+[
+  {
+    "timestamp": "2023-10-01T09:15:00",
+    "source_ip": "192.168.1.100",
+    "destination_ip": "203.0.113.50",
+    "port": 22,
+    "protocol": "TCP",
+    "action": "ALLOW",
+    "bytes": 1024
+  },
+  {
+    "timestamp": "2023-10-01T10:12:33",
+    "source_ip": "45.33.32.156",
+    "destination_ip": "192.168.1.1",
+    "port": 22,
+    "protocol": "TCP",
+    "action": "DENY",
+    "bytes": 0
+  },
+  {
+    "timestamp": "2023-10-01T10:12:35",
+    "source_ip": "45.33.32.156",
+    "destination_ip": "192.168.1.1",
+    "port": 22,
+    "protocol": "TCP",
+    "action": "DENY",
+    "bytes": 0
+  },
+  {
+    "timestamp": "2023-10-01T10:12:37",
+    "source_ip": "45.33.32.156",
+    "destination_ip": "192.168.1.1",
+    "port": 22,
+    "protocol": "TCP",
+    "action": "DENY",
+    "bytes": 0
+  },
+  {
+    "timestamp": "2023-10-01T11:45:18",
+    "source_ip": "172.16.0.22",
+    "destination_ip": "192.168.1.105",
+    "port": 443,
+    "protocol": "TCP",
+    "action": "ALLOW",
+    "bytes": 2048
+  }
+]

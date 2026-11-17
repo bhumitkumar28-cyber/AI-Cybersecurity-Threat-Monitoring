@@ -1,0 +1,371 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="log-details">
+
+    <!-- PAGE HEADER -->
+    <h2>
+        <i class="fas fa-file-code"></i>
+        Log Details
+    </h2>
+
+    <!-- LOG HEADER -->
+    <div class="log-header">
+
+        <div class="log-info">
+            <span class="log-type-badge">
+                {{ log.get_log_type_display }}
+            </span>
+
+            <span class="log-timestamp">
+                {{ log.timestamp|date:"M d, Y H:i:s" }}
+            </span>
+        </div>
+
+        <div class="log-score">
+            <span>
+                Threat Score:
+                {{ log.threat_score|floatformat:1 }}
+            </span>
+
+            <span class="threat-badge threat-{{ log.threat_level|lower }}">
+                {{ log.threat_level }}
+            </span>
+
+            {% if log.anomaly_detected %}
+                <span class="anomaly-badge">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Anomaly Detected
+                </span>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- LOG CONTENT -->
+    <div class="log-content">
+
+        <!-- DEEP LEARNING ANALYSIS -->
+        <div class="threat-intelligence-section">
+
+            <div class="prediction-header">
+                <h3>
+                    <i class="fas fa-brain"></i>
+                    Deep Learning Analysis
+                </h3>
+
+                <span class="ai-status">AUTOENCODER</span>
+            </div>
+
+            {% if deep_learning.available %}
+
+                <div class="threat-intelligence-card">
+
+                    <div class="threat-intelligence-header">
+                        <div>
+                            <span class="indicator-type">
+                                Model Result
+                            </span>
+
+                            <strong class="indicator-value">
+                                {% if deep_learning.is_anomaly %}
+                                    Anomaly Signal
+                                {% else %}
+                                    No Anomaly Signal
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        {% if deep_learning.is_anomaly %}
+                            <span class="threat-badge threat-high">
+                                REVIEW REQUIRED
+                            </span>
+                        {% else %}
+                            <span class="threat-badge threat-low">
+                                NO SIGNAL
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="threat-intelligence-grid">
+
+                        <div class="intel-item">
+                            <span class="intel-label">
+                                Reconstruction Error
+                            </span>
+
+                            <strong>
+                                {{ deep_learning.anomaly_score|floatformat:6 }}
+                            </strong>
+                        </div>
+
+                        <div class="intel-item">
+                            <span class="intel-label">
+                                Detection Threshold
+                            </span>
+
+                            <strong>
+                                {{ deep_learning.threshold|floatformat:6 }}
+                            </strong>
+                        </div>
+
+                        <div class="intel-item">
+                            <span class="intel-label">
+                                Model
+                            </span>
+
+                            <strong>
+                                Security Autoencoder
+                            </strong>
+                        </div>
+
+                    </div>
+
+                    {% if deep_learning.features %}
+                        <details>
+                            <summary>View Model Input Features</summary>
+
+                            <pre class="raw-data">{{ deep_learning.features|pprint }}</pre>
+                        </details>
+                    {% endif %}
+
+                    <div class="intel-description">
+                        <p>
+                            <strong>Interpretation:</strong>
+
+                            {% if deep_learning.is_anomaly %}
+                                The reconstruction error is above the
+                                configured threshold. Review this log
+                                alongside other security signals.
+                            {% else %}
+                                The reconstruction error is not above
+                                the configured threshold. This does not
+                                guarantee that the log is safe.
+                            {% endif %}
+                        </p>
+
+                        <p>
+                            <small>
+                                Experimental model result only. An anomaly
+                                signal is not proof of a confirmed
+                                cyberattack. The model's reliability depends
+                                on its training data and threshold.
+                            </small>
+                        </p>
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <div class="threat-intelligence-card">
+                    <p>
+                        Deep Learning result is unavailable for this log.
+                    </p>
+
+                    {% if deep_learning.reason %}
+                        <p>
+                            <strong>Reason:</strong>
+                            {{ deep_learning.reason }}
+                        </p>
+                    {% else %}
+                        <p>
+                            This log may have been processed before
+                            Deep Learning integration.
+                        </p>
+                    {% endif %}
+                </div>
+
+            {% endif %}
+
+        </div>
+
+        <!-- RAW LOG DATA -->
+        <div class="raw-data-section">
+
+            <h3>
+                <i class="fas fa-code"></i>
+                Raw Log Data
+            </h3>
+
+            <pre class="raw-data">{{ raw_data_json }}</pre>
+
+        </div>
+
+        <!-- DETECTED THREATS -->
+        {% if threats %}
+
+            <div class="threats-section">
+
+                <h3>
+                    <i class="fas fa-bug"></i>
+                    Detected Threats
+                </h3>
+
+                {% for threat in threats %}
+
+                    <div class="threat-card">
+
+                        <div class="threat-header">
+                            <h4>{{ threat.threat_type }}</h4>
+
+                            <span class="threat-severity">
+                                {{ threat.severity }}
+                            </span>
+                        </div>
+
+                        <div class="threat-body">
+
+                            <p>
+                                <strong>Description:</strong>
+                                {{ threat.description }}
+                            </p>
+
+                            <p>
+                                <strong>AI Analysis:</strong>
+                                {{ threat.ai_explanation|linebreaks }}
+                            </p>
+
+                            <p>
+                                <strong>Recommended Action:</strong>
+                                {{ threat.recommended_action }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="no-threats">
+                <p>No threats detected for this log entry.</p>
+            </div>
+
+        {% endif %}
+
+        <!-- THREAT INTELLIGENCE -->
+        <div class="threat-intelligence-section">
+
+            <div class="prediction-header">
+                <h3>
+                    <i class="fas fa-globe"></i>
+                    Threat Intelligence
+                </h3>
+
+                <span class="ai-status">INTELLIGENCE</span>
+            </div>
+
+            {% if threat_intelligence %}
+
+                {% for item in threat_intelligence %}
+
+                    <div class="threat-intelligence-card">
+
+                        <div class="threat-intelligence-header">
+
+                            <div>
+                                <span class="indicator-type">
+                                    {{ item.indicator_type }}
+                                </span>
+
+                                <strong class="indicator-value">
+                                    {{ item.indicator }}
+                                </strong>
+                            </div>
+
+                            <span class="threat-badge threat-{{ item.severity|lower }}">
+                                {{ item.severity }}
+                            </span>
+
+                        </div>
+
+                        <div class="threat-intelligence-grid">
+
+                            <div class="intel-item">
+                                <span class="intel-label">
+                                    Threat Type
+                                </span>
+
+                                <strong>
+                                    {{ item.threat_type }}
+                                </strong>
+                            </div>
+
+                            <div class="intel-item">
+                                <span class="intel-label">
+                                    Confidence
+                                </span>
+
+                                <strong>
+                                    {{ item.confidence }}%
+                                </strong>
+                            </div>
+
+                            <div class="intel-item">
+                                <span class="intel-label">
+                                    Source
+                                </span>
+
+                                <strong>
+                                    {{ item.source }}
+                                </strong>
+                            </div>
+
+                        </div>
+
+                        <div class="intel-description">
+
+                            <p>
+                                <strong>Description:</strong>
+                                {{ item.description }}
+                            </p>
+
+                            <p>
+                                <strong>Recommendation:</strong>
+                                {{ item.recommended_action }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="no-threat-intelligence">
+                    <i class="fas fa-shield-alt"></i>
+
+                    <p>
+                        No Threat Intelligence indicators
+                        found for this log.
+                    </p>
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="log-actions">
+
+        <a
+            href="{% url 'dashboard' %}"
+            class="btn btn-secondary"
+        >
+            Back to Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

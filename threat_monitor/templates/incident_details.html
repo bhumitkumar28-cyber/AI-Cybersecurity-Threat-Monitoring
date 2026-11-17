@@ -1,0 +1,33 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Incident Details</h1>
+
+    <p><strong>Incident ID:</strong> {{ incident.incident_id }}</p>
+    <p><strong>Title:</strong> {{ incident.title }}</p>
+    <p><strong>Status:</strong> {{ incident.status }}</p>
+    <p><strong>Assignee:</strong> {{ incident.assignee|default:"Unassigned" }}</p>
+    <p><strong>Created:</strong> {{ incident.created_at }}</p>
+    <p><strong>Updated:</strong> {{ incident.updated_at }}</p>
+
+    <h2>Related Threat</h2>
+    <p>{{ incident.threat.threat_type }}</p>
+    <p><strong>Severity:</strong> {{ incident.threat.severity }}</p>
+    <p>{{ incident.threat.description }}</p>
+
+    <h2>Resolution History</h2>
+    {% for entry in incident.resolution_history %}
+        <div>
+            <p><strong>User:</strong> {{ entry.user }}</p>
+            <p><strong>Status:</strong> {{ entry.status }}</p>
+            <p><strong>Note:</strong> {{ entry.note }}</p>
+        </div>
+    {% empty %}
+        <p>No resolution history available.</p>
+    {% endfor %}
+
+    <a href="{% url 'incident_list' %}">Back to Incidents</a>
+</div>
+{% endblock %}

@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="dashboard">
+
+    <div class="page-header">
+
+        <h2>
+            <i class="fas fa-globe"></i>
+            Threat Intelligence
+        </h2>
+
+        <p>
+            Security indicators and threat reputation analysis
+        </p>
+
+    </div>
+
+
+    <!-- Summary -->
+
+    <div class="summary-cards">
+
+        <div class="card">
+
+            <i class="fas fa-database card-icon"></i>
+
+            <div class="card-content">
+
+                <h3>
+                    {{ total_indicators }}
+                </h3>
+
+                <p>
+                    Total Indicators
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <i class="fas fa-exclamation-triangle card-icon"></i>
+
+            <div class="card-content">
+
+                <h3>
+                    {{ high_indicators }}
+                </h3>
+
+                <p>
+                    High Risk Indicators
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <i class="fas fa-skull-crossbones card-icon"></i>
+
+            <div class="card-content">
+
+                <h3>
+                    {{ critical_indicators }}
+                </h3>
+
+                <p>
+                    Critical Indicators
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Search -->
+
+    <div class="chart-box">
+
+        <h3>
+            <i class="fas fa-search"></i>
+            Check Security Indicator
+        </h3>
+
+        <div class="prediction-form">
+
+            <div class="prediction-input">
+
+                <label>
+                    IP / Domain / SHA256
+                </label>
+
+                <input
+                    type="text"
+                    id="indicatorInput"
+                    placeholder="Enter IP, domain or hash"
+                >
+
+            </div>
+
+        </div>
+
+        <button
+            type="button"
+            class="btn btn-primary"
+            id="checkIndicatorBtn"
+        >
+            <i class="fas fa-search"></i>
+            Check Threat Intelligence
+        </button>
+
+        <div
+            id="intelligenceResult"
+            class="prediction-result"
+            style="display:none;"
+        ></div>
+
+    </div>
+
+
+    <!-- Intelligence Database -->
+
+    <div class="recent-threats">
+
+        <h3>
+            <i class="fas fa-shield-alt"></i>
+            Intelligence Database
+        </h3>
+
+        {% if intelligence %}
+
+        <div class="threats-list">
+
+            {% for item in intelligence %}
+
+            <div class="threat-item threat-{{ item.severity|lower }}">
+
+                <div class="threat-header">
+
+                    <span class="threat-type">
+
+                        {{ item.indicator_type }}
+
+                        :
+
+                        {{ item.indicator }}
+
+                    </span>
+
+                    <span class="threat-severity">
+
+                        {{ item.severity }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="threat-description">
+
+                    <strong>
+                        {{ item.threat_type }}
+                    </strong>
+
+                    <br>
+
+                    {{ item.description }}
+
+                </div>
+
+
+                <div class="threat-time">
+
+                    Confidence:
+                    {{ item.confidence }}%
+
+                    |
+
+                    Source:
+                    {{ item.source }}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <p class="no-data">
+            No threat intelligence indicators available.
+        </p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const button =
+            document.getElementById(
+                'checkIndicatorBtn'
+            );
+
+        const input =
+            document.getElementById(
+                'indicatorInput'
+            );
+
+        const result =
+            document.getElementById(
+                'intelligenceResult'
+            );
+
+
+        button.addEventListener(
+            'click',
+            async function () {
+
+                const indicator =
+                    input.value.trim();
+
+
+                if (!indicator) {
+
+                    result.style.display =
+                        'block';
+
+                    result.innerHTML =
+                        '<p>Please enter an indicator.</p>';
+
+                    return;
+
+                }
+
+
+                result.style.display =
+                    'block';
+
+                result.innerHTML =
+                    '<p>Checking Threat Intelligence...</p>';
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `/api/threat-intelligence/check/?indicator=${encodeURIComponent(indicator)}`
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.error ||
+                            'Intelligence check failed'
+                        );
+
+                    }
+
+
+                    if (!data.results.length) {
+
+                        result.innerHTML = `
+                            <div class="prediction-item">
+                                <span>Result</span>
+                                <strong>NO INDICATOR FOUND</strong>
+                            </div>
+                        `;
+
+                        return;
+
+                    }
+
+
+                    result.innerHTML =
+                        data.results.map(
+                            item => `
+
+                            <div class="prediction-item">
+
+                                <span>
+                                    Indicator
+                                </span>
+
+                                <strong>
+                                    ${item.indicator}
+                                </strong>
+
+                            </div>
+
+                            <div class="prediction-item">
+
+                                <span>
+                                    Type
+                                </span>
+
+                                <strong>
+                                    ${item.indicator_type}
+                                </strong>
+
+                            </div>
+
+                            <div class="prediction-item">
+
+                                <span>
+                                    Threat
+                                </span>
+
+                                <strong>
+                                    ${item.threat_type}
+                                </strong>
+
+                            </div>
+
+                            <div class="prediction-item">
+
+                                <span>
+                                    Severity
+                                </span>
+
+                                <strong>
+                                    ${item.severity}
+                                </strong>
+
+                            </div>
+
+                            <div class="prediction-item">
+
+                                <span>
+                                    Confidence
+                                </span>
+
+                                <strong>
+                                    ${item.confidence}%
+                                </strong>
+
+                            </div>
+
+                            <div class="prediction-item">
+
+                                <span>
+                                    Source
+                                </span>
+
+                                <strong>
+                                    ${item.source}
+                                </strong>
+
+                            </div>
+
+                            <div class="prediction-item">
+
+                                <span>
+                                    Recommendation
+                                </span>
+
+                                <strong>
+                                    ${item.recommended_action}
+                                </strong>
+
+                            </div>
+
+                        `
+                        ).join('');
+
+                }
+
+                catch (error) {
+
+                    result.innerHTML =
+                        `<p>${error.message}</p>`;
+
+                }
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+{% endblock %}

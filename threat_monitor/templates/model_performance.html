@@ -1,0 +1,41 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Model Performance Dashboard</h1>
+    <p>Operational statistics for your threat-monitoring system.</p>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Logs</h3>
+            <p>{{ model_metrics.total_logs }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Processed Logs</h3>
+            <p>{{ model_metrics.processed_logs }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Anomalies Detected</h3>
+            <p>{{ model_metrics.anomalies_detected }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Threats</h3>
+            <p>{{ model_metrics.total_threats }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>High Threats</h3>
+            <p>{{ model_metrics.high_threats }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Critical Threats</h3>
+            <p>{{ model_metrics.critical_threats }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,623 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Threat Details | Cybersecurity Monitor
+{% endblock %}
+
+{% block content %}
+
+<div class="threat-details-container">
+
+```
+<!-- ========================================== -->
+<!-- AI SECURITY COPILOT -->
+<!-- ========================================== -->
+
+<section class="ai-copilot-card">
+
+    <div class="copilot-header">
+
+        <div class="copilot-title">
+            <span class="copilot-icon">🧠</span>
+
+            <h2>
+                AI Security Copilot
+            </h2>
+        </div>
+
+        <span class="copilot-severity {{ copilot.severity|lower }}">
+            {{ copilot.severity }}
+        </span>
+
+    </div>
+
+
+    <div class="copilot-body">
+
+        <h3>
+            {{ copilot.title }}
+        </h3>
+
+        <p class="copilot-summary">
+            {{ copilot.summary }}
+        </p>
+
+
+        {% if copilot.ai_explanation %}
+
+        <div class="copilot-ai-message">
+
+            <strong>
+                AI Analysis
+            </strong>
+
+            <p>
+                {{ copilot.ai_explanation }}
+            </p>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- COPILOT METRICS -->
+
+        <div class="copilot-metrics">
+
+            <div class="copilot-metric">
+
+                <span class="metric-label">
+                    Risk Score
+                </span>
+
+                <strong class="risk-score">
+                    {{ copilot.risk_score }}/100
+                </strong>
+
+            </div>
+
+
+            <div class="copilot-metric">
+
+                <span class="metric-label">
+                    MITRE ATT&CK
+                </span>
+
+                <strong class="mitre-code">
+                    {{ copilot.mitre_id }}
+                </strong>
+
+                <small>
+                    {{ copilot.mitre_name }}
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRIORITY -->
+
+        <div class="copilot-priority">
+
+            <strong>
+                Priority:
+            </strong>
+
+            {{ copilot.priority_message }}
+
+        </div>
+
+
+        <!-- RECOMMENDED ACTION -->
+
+        <div class="copilot-action">
+
+            <strong>
+                Recommended Action:
+            </strong>
+
+            <p>
+                {{ copilot.recommended_action }}
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ========================================== -->
+<!-- THREAT INTELLIGENCE -->
+<!-- ========================================== -->
+
+<section class="threat-intelligence-card">
+
+    <div class="ti-header">
+
+        <div>
+
+            <span class="ti-icon">
+                🌐
+            </span>
+
+            <span class="ti-title">
+                Threat Intelligence
+            </span>
+
+        </div>
+
+        <span class="ti-status">
+            INTELLIGENCE
+        </span>
+
+    </div>
+
+
+    <div class="ti-body">
+
+        <div class="ti-description">
+
+            External and contextual intelligence associated
+            with this security threat.
+
+        </div>
+
+
+        <!-- INTELLIGENCE INFORMATION -->
+
+        <div class="ti-grid">
+
+            <!-- Threat Type -->
+
+            <div class="ti-item">
+
+                <span class="ti-label">
+                    Threat Type
+                </span>
+
+                <strong>
+                    {{ threat.threat_type|default:"Unknown" }}
+                </strong>
+
+            </div>
+
+
+            <!-- Risk Score -->
+
+            <div class="ti-item">
+
+                <span class="ti-label">
+                    Risk Score
+                </span>
+
+                <strong>
+
+                    {% if copilot.risk_score %}
+                        {{ copilot.risk_score }}/100
+                    {% else %}
+                        N/A
+                    {% endif %}
+
+                </strong>
+
+            </div>
+
+
+            <!-- MITRE -->
+
+            <div class="ti-item">
+
+                <span class="ti-label">
+                    MITRE ATT&CK
+                </span>
+
+                <strong>
+
+                    {% if copilot.mitre_id %}
+                        {{ copilot.mitre_id }}
+                    {% else %}
+                        Not mapped
+                    {% endif %}
+
+                </strong>
+
+            </div>
+
+
+            <!-- Indicator -->
+
+            <div class="ti-item">
+
+                <span class="ti-label">
+                    Indicator
+                </span>
+
+                <strong id="ti-indicator">
+                    Detecting...
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- INTELLIGENCE ANALYSIS -->
+
+        <div class="ti-analysis">
+
+            <h4>
+                🔎 Intelligence Analysis
+            </h4>
+
+            <p id="ti-result">
+                Checking available threat intelligence...
+            </p>
+
+        </div>
+
+
+        <!-- RECOMMENDED ACTION -->
+
+        <div class="ti-recommendation">
+
+            <h4>
+                🛡 Recommended Action
+            </h4>
+
+            <p id="ti-action">
+                Analyzing threat context...
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ========================================== -->
+<!-- ORIGINAL THREAT DETAILS -->
+<!-- ========================================== -->
+
+<section class="threat-card">
+
+    <div class="threat-header">
+
+        <h2>
+            {{ threat.threat_type }}
+        </h2>
+
+        <span class="threat-severity {{ threat.severity|lower }}">
+            {{ threat.severity }}
+        </span>
+
+    </div>
+
+
+    <div class="threat-body">
+
+        <p>
+
+            <strong>
+                Description:
+            </strong>
+
+            {{ threat.description }}
+
+        </p>
+
+
+        <p>
+
+            <strong>
+                Detected At:
+            </strong>
+
+            {{ threat.detected_at|date:"M d, Y H:i:s" }}
+
+        </p>
+
+
+        <p>
+
+            <strong>
+                Threat Score:
+            </strong>
+
+            {{ threat.log.threat_score|floatformat:1 }}/100
+
+        </p>
+
+
+        <p>
+
+            <strong>
+                Anomaly Detected:
+            </strong>
+
+            {% if threat.log.anomaly_detected %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+
+        </p>
+
+    </div>
+
+
+    <a
+        href="{% url 'log_details' threat.log.id %}"
+        class="btn btn-secondary"
+    >
+
+        <i class="fas fa-file-code"></i>
+
+        View Raw Log
+
+    </a>
+
+</section>
+
+
+<!-- ========================================== -->
+<!-- NAVIGATION -->
+<!-- ========================================== -->
+
+<div class="log-actions">
+
+    <a
+        href="{% url 'filter_threats' %}"
+        class="btn btn-secondary"
+    >
+
+        <i class="fas fa-arrow-left"></i>
+
+        Back to Threats
+
+    </a>
+
+
+    <a
+        href="{% url 'dashboard' %}"
+        class="btn btn-secondary"
+    >
+
+        <i class="fas fa-chart-line"></i>
+
+        Dashboard
+
+    </a>
+
+</div>
+```
+
+</div>
+
+<!-- ========================================== -->
+
+<!-- THREAT INTELLIGENCE JAVASCRIPT -->
+
+<!-- ========================================== -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const resultBox = document.getElementById("ti-result");
+
+    const actionBox = document.getElementById("ti-action");
+
+    const indicatorBox = document.getElementById("ti-indicator");
+
+
+    /*
+     * SecurityLog raw_data
+     */
+
+    const rawData = {{ threat.log.raw_data|safe }};
+
+
+    /*
+     * Possible security indicator fields
+     */
+
+    const possibleKeys = [
+
+        "source_ip",
+        "src_ip",
+        "ip_address",
+        "client_ip",
+        "remote_ip",
+        "destination_ip",
+        "dest_ip",
+        "ip",
+        "indicator",
+        "domain",
+        "sha256",
+        "hash"
+
+    ];
+
+
+    /*
+     * Find indicator
+     */
+
+    let indicator = "";
+
+
+    for (const key of possibleKeys) {
+
+        if (
+            rawData &&
+            rawData[key] !== undefined &&
+            rawData[key] !== null &&
+            String(rawData[key]).trim() !== ""
+        ) {
+
+            indicator = String(rawData[key]).trim();
+
+            break;
+
+        }
+
+    }
+
+
+    console.log("Raw Security Log:", rawData);
+
+    console.log("Detected Indicator:", indicator);
+
+
+    /*
+     * No indicator found
+     */
+
+    if (!indicator) {
+
+        indicatorBox.textContent = "Not available";
+
+        resultBox.textContent =
+            "No IP, domain or hash indicator was found in the security log.";
+
+        actionBox.textContent =
+            "Review the raw log for available security indicators.";
+
+        return;
+
+    }
+
+
+    /*
+     * Display detected indicator
+     */
+
+    indicatorBox.textContent = indicator;
+
+
+    /*
+     * Threat Intelligence API
+     */
+
+    const apiUrl =
+        `/api/threat-intelligence/check/?indicator=${encodeURIComponent(indicator)}`;
+
+
+    fetch(apiUrl)
+
+        .then(response => {
+
+            return response.json().then(data => {
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Threat Intelligence API failed"
+                    );
+
+                }
+
+                return data;
+
+            });
+
+        })
+
+
+        .then(data => {
+
+            console.log(
+                "Threat Intelligence Response:",
+                data
+            );
+
+
+            /*
+             * No intelligence found
+             */
+
+            if (
+                !data.results ||
+                !data.results.length
+            ) {
+
+                resultBox.textContent =
+                    "No matching threat intelligence was found for this indicator.";
+
+                actionBox.textContent =
+                    "Continue monitoring this indicator and investigate the source.";
+
+                return;
+
+            }
+
+
+            /*
+             * Get first intelligence result
+             */
+
+            const intelligence = data.results[0];
+
+
+            /*
+             * Update indicator
+             */
+
+            indicatorBox.textContent =
+                intelligence.indicator ||
+                indicator;
+
+
+            /*
+             * Intelligence Analysis
+             */
+
+            resultBox.textContent =
+                intelligence.description ||
+                `This indicator is associated with ${
+                    intelligence.threat_type ||
+                    "a security threat"
+                }.`;
+
+
+            /*
+             * Recommended Action
+             */
+
+            actionBox.textContent =
+                intelligence.recommended_action ||
+                "Investigate and monitor this indicator.";
+
+        })
+
+
+        .catch(error => {
+
+            console.error(
+                "Threat Intelligence Error:",
+                error
+            );
+
+
+            indicatorBox.textContent =
+                indicator;
+
+
+            resultBox.textContent =
+                "Threat intelligence could not be retrieved.";
+
+
+            actionBox.textContent =
+                "Review the raw log and continue monitoring the threat.";
+
+        });
+
+});
+
+</script>
+
+{% endblock %}

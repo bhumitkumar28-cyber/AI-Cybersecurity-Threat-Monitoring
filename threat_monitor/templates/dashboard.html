@@ -1,0 +1,951 @@
+
+{% extends 'base.html' %}
+
+{% block page_title %}Security Overview{% endblock %}
+
+{% block content %}
+
+<div class="dashboard">
+
+    <!-- PAGE HEADING -->
+    <section class="dashboard-heading">
+        <div>
+            <span class="eyebrow">
+                <i class="fas fa-shield-halved"></i>
+                SECURITY OPERATIONS CENTER
+            </span>
+            <h1>Security Overview</h1>
+            <p>Monitor threats, analyze logs and investigate suspicious activity.</p>
+        </div>
+
+        <a href="{% url 'upload_logs' %}" class="btn btn-primary">
+            <i class="fas fa-cloud-arrow-up"></i>
+            Upload Logs
+        </a>
+    </section>
+
+    <!-- SUMMARY CARDS -->
+    <section class="summary-cards">
+
+        <div class="card">
+            <div class="card-icon">
+                <i class="fas fa-file-lines"></i>
+            </div>
+            <div class="card-content">
+                <p>Total Logs Analyzed</p>
+                <h3>{{ total_logs|default:0 }}</h3>
+                <small>Security events processed</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon critical-icon">
+                <i class="fas fa-shield-virus"></i>
+            </div>
+            <div class="card-content">
+                <p>Critical Threats</p>
+                <h3>{{ critical_threats|default:0 }}</h3>
+                <small>Critical severity count</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon purple-icon">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div class="card-content">
+                <p>Threats Detected</p>
+                <h3 id="threat-count">—</h3>
+                <small>From recent threat records</small>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="charts-container">
+
+        <div class="chart-box">
+            <div class="panel-heading">
+                <div>
+                    <h3>
+                        <i class="fas fa-chart-pie"></i>
+                        Threat Distribution
+                    </h3>
+                    <p>Breakdown by severity level</p>
+                </div>
+                <span class="panel-badge">ANALYTICS</span>
+            </div>
+
+            <div class="chart-canvas">
+                <canvas id="threatChart"></canvas>
+            </div>
+            <p id="threatChartStatus" class="chart-status"
+               role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="chart-box">
+            <div class="panel-heading">
+                <div>
+                    <h3>
+                        <i class="fas fa-chart-column"></i>
+                        Recent Activity
+                    </h3>
+                    <p>Threat records returned by the API</p>
+                </div>
+                <span class="panel-badge">ACTIVITY</span>
+            </div>
+
+            <div class="chart-canvas">
+                <canvas id="activityChart"></canvas>
+            </div>
+            <p id="activityChartStatus" class="chart-status"
+               role="status" aria-live="polite"></p>
+        </div>
+
+    </section>
+
+    <!-- AI THREAT PREDICTION -->
+    <section class="ai-prediction-section" id="ai-prediction">
+
+        <div class="prediction-header">
+            <div>
+                <span class="eyebrow purple-eyebrow">
+                    <i class="fas fa-microchip"></i>
+                    MACHINE LEARNING
+                </span>
+                <h3>
+                    <i class="fas fa-brain"></i>
+                    AI Threat Prediction
+                </h3>
+                <p class="section-description">
+                    Submit security activity indicators to your prediction API.
+                </p>
+            </div>
+
+            <span class="ai-status">
+                <span class="status-dot"></span>
+                PREDICTION MODULE
+            </span>
+        </div>
+
+        <form id="predictionForm">
+            {% csrf_token %}
+
+            <div class="prediction-form">
+
+                <div class="prediction-input">
+                    <label for="failed_logins">Failed Logins</label>
+                    <input type="number" id="failed_logins"
+                           value="40" min="0" required>
+                </div>
+
+                <div class="prediction-input">
+                    <label for="login_attempts">Login Attempts</label>
+                    <input type="number" id="login_attempts"
+                           value="50" min="0" required>
+                </div>
+
+                <div class="prediction-input">
+                    <label for="unique_ips">Unique IPs</label>
+                    <input type="number" id="unique_ips"
+                           value="8" min="0" required>
+                </div>
+
+                <div class="prediction-input">
+                    <label for="request_count">Request Count</label>
+                    <input type="number" id="request_count"
+                           value="250" min="0" required>
+                </div>
+
+                <div class="prediction-input">
+                    <label for="anomaly_score">Anomaly Score</label>
+                    <input type="number" id="anomaly_score"
+                           value="0.90" min="0" max="1"
+                           step="0.01" required>
+                </div>
+
+                <div class="prediction-input">
+                    <label for="port_activity">Port Activity</label>
+                    <input type="number" id="port_activity"
+                           value="10" min="0" required>
+                </div>
+
+            </div>
+
+            <div class="prediction-actions">
+                <button type="submit" id="predictThreatBtn"
+                        class="btn btn-primary">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    Run AI Threat Prediction
+                </button>
+
+                <span class="prediction-hint">
+                    Results depend on the trained model and API response.
+                </span>
+            </div>
+        </form>
+
+        <div id="predictionLoading" class="prediction-loading"
+             role="status" aria-live="polite" hidden>
+            <i class="fas fa-spinner fa-spin"></i>
+            Analyzing security indicators...
+        </div>
+
+        <div id="predictionError" class="prediction-error"
+             role="alert" hidden></div>
+
+        <div id="predictionResult" class="prediction-result" hidden>
+
+            <div class="prediction-item">
+                <span>Predicted Threat</span>
+                <strong id="predictionThreat">—</strong>
+            </div>
+
+            <div class="prediction-item">
+                <span>Probability</span>
+                <strong id="predictionProbability">—</strong>
+            </div>
+
+            <div class="prediction-item">
+                <span>Risk Level</span>
+                <strong id="predictionRisk">—</strong>
+            </div>
+
+            <div class="prediction-item">
+                <span>Training Samples</span>
+                <strong id="predictionSamples">—</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- OPERATIONAL METRICS -->
+    <section class="operations-section">
+        <div class="panel-heading">
+            <div>
+                <h3>
+                    <i class="fas fa-list-check"></i>
+                    Security Operations
+                </h3>
+                <p>Incident and investigation overview</p>
+            </div>
+        </div>
+
+        <div class="operations-grid">
+
+            <article class="stat-card">
+                <div class="operation-icon">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <h3>Open Incidents</h3>
+                <p>{{ open_incidents|default:0 }}</p>
+                <a href="{% url 'incident_list' %}">
+                    View Incidents <i class="fas fa-arrow-right"></i>
+                </a>
+            </article>
+
+            <article class="stat-card">
+                <div class="operation-icon purple-icon">
+                    <i class="fas fa-diagram-project"></i>
+                </div>
+                <h3>Attack Chains</h3>
+                <p>{{ chain_count|default:0 }}</p>
+                <a href="{% url 'filter_threats' %}">
+                    Investigate Threats <i class="fas fa-arrow-right"></i>
+                </a>
+            </article>
+
+            <article class="stat-card">
+                <div class="operation-icon blue-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <h3>Human Review</h3>
+                <p>{{ review_count|default:0 }}</p>
+                <a href="{% url 'review_queue' %}">
+                    Open Review Queue <i class="fas fa-arrow-right"></i>
+                </a>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- RECENT THREATS -->
+    <section class="recent-threats" id="recent-threats">
+
+        <div class="panel-heading">
+            <div>
+                <h3>
+                    <i class="fas fa-bell"></i>
+                    Recent Threats
+                </h3>
+                <p>Review detected security events</p>
+            </div>
+
+            <span class="panel-badge">THREAT FEED</span>
+        </div>
+
+        {% if threats %}
+            <div class="threats-list">
+
+                {% for threat in threats %}
+                    <article class="threat-item threat-{{ threat.severity|lower }}">
+
+                        <div class="threat-header">
+                            <div>
+                                <span class="threat-type">
+                                    {{ threat.threat_type }}
+                                </span>
+
+                                <div class="threat-time">
+                                    <i class="far fa-clock"></i>
+                                    {{ threat.detected_at|date:"M d, Y H:i" }}
+                                </div>
+                            </div>
+
+                            <span class="threat-severity {{ threat.severity }}">
+                                {{ threat.severity }}
+                            </span>
+                        </div>
+
+                        <p class="threat-description">
+                            {{ threat.description|default:"No additional description available." }}
+                        </p>
+
+                        <div class="threat-actions">
+                            <a href="{% url 'threat_details' threat.id %}"
+                               class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-up-right-from-square"></i>
+                                View Details
+                            </a>
+                        </div>
+
+                    </article>
+                {% endfor %}
+
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-shield-halved"></i>
+                <h4>No threats to display</h4>
+                <p>Upload security logs to analyze activity and view detected threats.</p>
+                <a href="{% url 'upload_logs' %}" class="btn btn-primary">
+                    Upload Security Logs
+                </a>
+            </div>
+        {% endif %}
+
+    </section>
+
+    <!-- SAMPLE DATA -->
+    <section class="sample-data-section">
+        <div class="sample-data-content">
+            <div class="sample-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <div>
+                <h3>Test Your Dashboard</h3>
+                <p>Load sample logs if your project provides a sample-data endpoint.</p>
+            </div>
+        </div>
+
+        <a href="{% url 'sample_logs' %}" class="btn btn-secondary">
+            <i class="fas fa-flask"></i>
+            Load Sample Data
+        </a>
+    </section>
+
+</div>
+
+<style>
+/* Dashboard-specific layout */
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.dashboard-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.dashboard-heading h1 {
+    margin: 7px 0 3px;
+    color: #e6edf5;
+    font-size: clamp(23px, 3vw, 30px);
+}
+
+.dashboard-heading p,
+.section-description,
+.panel-heading p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.eyebrow {
+    color: #00f5a0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+}
+
+.purple-eyebrow {
+    color: #a78bfa;
+}
+
+.summary-cards {
+    margin: 0;
+}
+
+.card-content p {
+    margin: 0 0 5px;
+}
+
+.card-content small {
+    display: block;
+    margin-top: 6px;
+    color: #718096;
+    font-size: 10px;
+}
+
+.critical-icon {
+    color: #ff526b !important;
+}
+
+.purple-icon {
+    color: #a78bfa !important;
+}
+
+.blue-icon {
+    color: #60a5fa !important;
+}
+
+.panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.panel-heading h3 {
+    margin: 0;
+}
+
+.panel-badge {
+    padding: 5px 8px;
+    border: 1px solid #2a394b;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 9px;
+    letter-spacing: .7px;
+}
+
+.chart-canvas {
+    position: relative;
+    height: 245px;
+    width: 100%;
+}
+
+.chart-status {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.prediction-header h3 {
+    margin: 7px 0 0;
+}
+
+.prediction-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+.prediction-hint {
+    color: #8190a3;
+    font-size: 11px;
+}
+
+.prediction-loading,
+.prediction-error {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.prediction-loading {
+    background: rgba(96, 165, 250, .08);
+    color: #93c5fd;
+}
+
+.prediction-error {
+    background: rgba(255, 82, 107, .08);
+    border: 1px solid rgba(255, 82, 107, .2);
+    color: #ff8194;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.operations-section {
+    min-width: 0;
+}
+
+.operations-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    background: #101721;
+    border: 1px solid #243242;
+    border-radius: 12px;
+}
+
+.stat-card h3 {
+    margin-top: 12px;
+}
+
+.stat-card p {
+    margin: 8px 0 15px;
+}
+
+.operation-icon,
+.sample-icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(0, 245, 160, .08);
+    color: #00f5a0;
+}
+
+.stat-card a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recent-threats {
+    margin: 0;
+}
+
+.threat-header {
+    gap: 14px;
+}
+
+.threat-time {
+    margin-top: 6px;
+}
+
+.threat-actions {
+    margin-top: 12px;
+}
+
+.empty-state {
+    padding: 35px 15px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.empty-state > i {
+    color: #00f5a0;
+    font-size: 30px;
+}
+
+.empty-state h4 {
+    margin: 12px 0 5px;
+    color: #e6edf5;
+}
+
+.empty-state p {
+    margin: 0 0 18px;
+    font-size: 12px;
+}
+
+.sample-data-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 20px;
+    background: #101721;
+    border: 1px solid #243242;
+    border-radius: 12px;
+}
+
+.sample-data-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.sample-data-content h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.sample-data-content p {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+@media (max-width: 900px) {
+    .operations-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .dashboard-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-heading > .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .prediction-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .prediction-actions .btn {
+        width: 100%;
+    }
+
+    .chart-canvas {
+        height: 220px;
+    }
+
+    .sample-data-section {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
+
+    // ======================================
+    // CHART DEFAULTS
+    // ======================================
+    if (window.Chart) {
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#263547';
+        Chart.defaults.font.family = 'Segoe UI, sans-serif';
+    }
+
+    const $ = (id) => document.getElementById(id);
+
+    // ======================================
+    // API HELPER
+    // ======================================
+    async function fetchJSON(url, options = {}) {
+        const response = await fetch(url, {
+            credentials: 'same-origin',
+            ...options
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || result.detail ||
+                `Request failed (${response.status})`
+            );
+        }
+
+        return result;
+    }
+
+    // ======================================
+    // THREAT DISTRIBUTION CHART
+    // ======================================
+    async function loadThreatChart() {
+        const canvas = $('threatChart');
+        const status = $('threatChartStatus');
+
+        if (!canvas || !window.Chart) return;
+
+        try {
+            const result = await fetchJSON('/api/threat-distribution/');
+            const distribution = result.distribution || [];
+
+            if (!distribution.length) {
+                status.textContent = 'No distribution data available.';
+                return;
+            }
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: distribution.map(item => item.severity),
+                    datasets: [{
+                        data: distribution.map(item => item.count),
+                        backgroundColor: [
+                            '#00e5a0',
+                            '#60a5fa',
+                            '#fbbf24',
+                            '#ff526b'
+                        ],
+                        borderColor: '#101721',
+                        borderWidth: 3,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 18
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Threat chart error:', error);
+            status.textContent = 'Unable to load threat distribution.';
+        }
+    }
+
+    // ======================================
+    // RECENT ACTIVITY CHART
+    // ======================================
+    async function loadActivityChart() {
+        const canvas = $('activityChart');
+        const status = $('activityChartStatus');
+
+        if (!canvas || !window.Chart) return;
+
+        try {
+            const result = await fetchJSON('/api/recent-threats/');
+            const threats = result.threats || [];
+
+            if (!threats.length) {
+                status.textContent = 'No recent activity available.';
+                return;
+            }
+
+            // Display the most recent records returned by the API.
+            const recent = threats.slice(-10);
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: recent.map(item => item.time || 'Event'),
+                    datasets: [{
+                        label: 'Threat Records',
+                        data: recent.map(() => 1),
+                        backgroundColor: recent.map(item => {
+                            const severity =
+                                String(item.severity || '').toUpperCase();
+
+                            if (severity === 'CRITICAL') return '#ff526b';
+                            if (severity === 'HIGH') return '#fb923c';
+                            if (severity === 'MEDIUM') return '#fbbf24';
+
+                            return '#00e5a0';
+                        }),
+                        borderRadius: 5,
+                        maxBarThickness: 32
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 35,
+                                minRotation: 0
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            grid: { color: '#263547' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Activity chart error:', error);
+            status.textContent = 'Unable to load recent activity.';
+        }
+    }
+
+    // ======================================
+    // THREAT COUNT
+    // ======================================
+    async function loadThreatCount() {
+        const countElement = $('threat-count');
+        if (!countElement) return;
+
+        try {
+            const result = await fetchJSON('/api/recent-threats/');
+            countElement.textContent = (result.threats || []).length;
+        } catch (error) {
+            console.error('Threat count error:', error);
+            countElement.textContent = '—';
+        }
+    }
+
+    loadThreatChart();
+    loadActivityChart();
+    loadThreatCount();
+
+    // ======================================
+    // CSRF TOKEN
+    // ======================================
+    function getCSRFToken() {
+        const cookie = document.cookie
+            .split('; ')
+            .find(item => item.startsWith('csrftoken='));
+
+        if (cookie) {
+            return decodeURIComponent(cookie.split('=').slice(1).join('='));
+        }
+
+        const input = document.querySelector(
+            '#predictionForm [name="csrfmiddlewaretoken"]'
+        );
+
+        return input ? input.value : '';
+    }
+
+    // ======================================
+    // AI THREAT PREDICTION
+    // ======================================
+    const form = $('predictionForm');
+    const button = $('predictThreatBtn');
+    const loading = $('predictionLoading');
+    const errorBox = $('predictionError');
+    const resultBox = $('predictionResult');
+
+    if (!form || !button) return;
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        errorBox.hidden = true;
+        errorBox.textContent = '';
+        resultBox.hidden = true;
+        loading.hidden = false;
+        button.disabled = true;
+        button.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+        try {
+            const data = {
+                failed_logins: Number($('failed_logins').value),
+                login_attempts: Number($('login_attempts').value),
+                unique_ips: Number($('unique_ips').value),
+                request_count: Number($('request_count').value),
+                anomaly_score: Number($('anomaly_score').value),
+                port_activity: Number($('port_activity').value)
+            };
+
+            const csrfToken = getCSRFToken();
+
+            if (!csrfToken) {
+                throw new Error(
+                    'CSRF token missing. Refresh the page and try again.'
+                );
+            }
+
+            for (const [key, value] of Object.entries(data)) {
+                if (!Number.isFinite(value) || value < 0) {
+                    throw new Error('Enter valid non-negative numeric values.');
+                }
+            }
+
+            if (data.anomaly_score > 1) {
+                throw new Error('Anomaly Score must be between 0 and 1.');
+            }
+
+            const response = await fetchJSON(
+                '/api/threat-prediction/predict/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(data)
+                }
+            );
+
+            if (!response.success || !response.prediction) {
+                throw new Error(response.error || 'Prediction failed.');
+            }
+
+            const prediction = response.prediction;
+
+            $('predictionThreat').textContent =
+                prediction.threat ?? 'Unknown';
+
+            $('predictionProbability').textContent =
+                prediction.probability != null
+                    ? `${prediction.probability}%`
+                    : '—';
+
+            $('predictionRisk').textContent =
+                prediction.risk ?? 'Unknown';
+
+            $('predictionSamples').textContent =
+                response.training?.samples ?? '—';
+
+            resultBox.hidden = false;
+
+            button.innerHTML =
+                '<i class="fas fa-check"></i> Prediction Complete';
+
+        } catch (error) {
+            console.error('Prediction error:', error);
+            errorBox.textContent = error.message ||
+                'Unable to complete the prediction.';
+            errorBox.hidden = false;
+
+            button.innerHTML =
+                '<i class="fas fa-rotate-right"></i> Try Again';
+
+        } finally {
+            loading.hidden = true;
+            button.disabled = false;
+        }
+    });
+});
+</script>
+
+{% endblock %}

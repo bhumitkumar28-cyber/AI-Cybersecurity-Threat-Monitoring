@@ -1,0 +1,5 @@
+2023-10-01 08:30:12 [INFO] 192.168.1.100 connected to 203.0.113.100:443
+2023-10-01 09:22:45 [WARN] High traffic detected from 10.0.0.55 to 192.168.1.1 (5000+ packets/sec)
+2023-10-01 10:33:22 [ALERT] Unusual DNS query: xzqjklmno.pwn.com from 172.16.0.22
+2023-10-01 11:15:08 [INFO] Normal traffic from 192.168.1.105 to 172.217.0.1
+2023-10-01 13:45:33 [CRITICAL] Port scan detected: 45.33.32.156 scanned ports 22,80,443,3306,5432 on 192.168.1.1
